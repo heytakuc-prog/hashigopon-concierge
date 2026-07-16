@@ -1,4 +1,223 @@
 (() => {
+  const EXTRA_REQUEST_KEYWORDS = [
+    { words: ["クラフトビール", "クラフト", "地ビール", "ローカルビール", "カナダビール", "タップビール"], tags: ["craft_beer", "beer"] },
+    { words: ["松戸ビール", "松戸のビール"], tags: ["local_beer", "craft_beer", "beer"] },
+    { words: ["日本酒", "地酒"], tags: ["sake"] },
+    { words: ["焼酎"], tags: ["shochu"] },
+    { words: ["ワイン", "葡萄酒"], tags: ["wine"] },
+    { words: ["カクテル"], tags: ["cocktail"] },
+    { words: ["ウイスキー", "ハイボール"], tags: ["whisky", "highball"] },
+    { words: ["サワー", "酎ハイ"], tags: ["sour"] },
+    { words: ["焼き鳥", "焼鳥", "串焼き", "串もの"], tags: ["yakitori", "meat"] },
+    { words: ["ジビエ", "鹿肉", "猪肉"], tags: ["game_meat", "meat"] },
+    { words: ["肉料理", "お肉", "肉が食べたい"], tags: ["meat", "full_meal"] },
+    { words: ["餃子", "ギョーザ"], tags: ["gyoza", "chinese"] },
+    { words: ["中華", "中国料理"], tags: ["chinese", "full_meal"] },
+    { words: ["ラーメン", "担々麺", "麺で締め", "麺類"], tags: ["noodles", "closing"] },
+    { words: ["ピザ", "ピッツァ", "石窯"], tags: ["pizza", "italian"] },
+    { words: ["パスタ", "イタリアン"], tags: ["pasta", "italian"] },
+    { words: ["魚料理", "海鮮", "刺身", "魚が食べたい"], tags: ["seafood", "full_meal"] },
+    { words: ["野菜", "有機野菜", "オーガニック"], tags: ["vegetables"] },
+    { words: ["カレー"], tags: ["curry", "international"] },
+    { words: ["異国料理", "多国籍", "世界の料理", "海外料理"], tags: ["international", "curious"] },
+    { words: ["ハワイ", "ハワイアン"], tags: ["hawaiian"] },
+    { words: ["アメリカン", "サンドイッチ"], tags: ["american", "sandwich"] },
+    { words: ["ビストロ"], tags: ["bistro"] },
+    { words: ["コーヒー", "珈琲", "カフェ"], tags: ["coffee"] },
+    { words: ["デザート", "甘いもの", "スイーツ"], tags: ["dessert"] },
+    { words: ["テラス", "外飲み", "外の席"], tags: ["open_air"] },
+    { words: ["店主と話", "スタッフと話", "店員と話"], tags: ["talk_owner", "homey"] },
+    { words: ["初めて", "入りやすい", "一見でも"], tags: ["first_visit", "casual"] },
+    { words: ["穴場", "隠れ家"], tags: ["hidden"] },
+    { words: ["静か", "落ち着いて", "ゆっくり話"], tags: ["calm", "quiet_drink", "slow_talk"] },
+    { words: ["にぎやか", "賑やか", "ワイワイ", "盛り上がり"], tags: ["lively", "party", "group_fun"] }
+  ];
+
+  const GENERIC_REQUEST_WORDS = [
+    "おすすめ", "お店", "店を", "店が", "ところ", "探して", "選んで", "行きたい", "ありますか",
+    "あるかな", "飲みたい", "食べたい", "したい", "がいい", "感じ", "希望", "条件", "お願い"
+  ];
+
+  function normalizeSearchText(value) {
+    return String(value || "")
+      .normalize("NFKC")
+      .toLowerCase()
+      .replace(/[ぁ-ゖ]/g, char => String.fromCharCode(char.charCodeAt(0) + 0x60))
+      .replace(/[^\p{L}\p{N}]/gu, "");
+  }
+
+  function usefulRequestText(value) {
+    let normalized = normalizeSearchText(value);
+    GENERIC_REQUEST_WORDS.forEach(word => {
+      normalized = normalized.replaceAll(normalizeSearchText(word), "");
+    });
+    return normalized;
+  }
+
+  function longestCommonSubstringLength(left, right) {
+    if (!left || !right) return 0;
+    const previous = new Uint16Array(right.length + 1);
+    let maximum = 0;
+    for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+      const current = new Uint16Array(right.length + 1);
+      for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+        if (left[leftIndex - 1] === right[rightIndex - 1]) {
+          current[rightIndex] = previous[rightIndex - 1] + 1;
+          maximum = Math.max(maximum, current[rightIndex]);
+        }
+      }
+      previous.set(current);
+    }
+    return maximum;
+  }
+
+  function allShopTags(shop) {
+    return [...new Set([
+      ...shop.peopleTags,
+      ...shop.moodTags,
+      ...shop.roundTags,
+      ...shop.atmosphereTags,
+      ...shop.welcomeTags,
+      ...shop.drinkTags,
+      ...shop.foodTags,
+      ...shop.styleTags,
+      ...shop.seatTags,
+      ...shop.ownerCommentTags
+    ])];
+  }
+
+  const originalRequestTags = requestTags;
+  requestTags = function requestTagsWithStoreVocabulary(text) {
+    const source = normalizeSearchText(text);
+    const tags = new Set(originalRequestTags(text));
+    if (!source) return [];
+
+    EXTRA_REQUEST_KEYWORDS.forEach(item => {
+      if (item.words.some(word => source.includes(normalizeSearchText(word)))) {
+        item.tags.forEach(tag => tags.add(tag));
+      }
+    });
+
+    state.shops.flatMap(allShopTags).forEach(tag => {
+      const label = normalizeSearchText(tagLabel(tag));
+      if (label.length >= 2 && source.includes(label)) tags.add(tag);
+    });
+
+    return [...tags];
+  };
+
+  function nameTokens(name) {
+    const ignored = new Set(["松戸", "松戸店", "店舗", "カフェ", "バー"]);
+    return String(name || "")
+      .split(/[\s・&＆/／()（）【】]+/)
+      .map(normalizeSearchText)
+      .filter(token => token.length >= 3 && !ignored.has(token));
+  }
+
+  function shopRequestMatch(shop) {
+    const request = usefulRequestText(state.requestText);
+    if (request.length < 2) return { bonus: 0, tags: [], evidence: "" };
+
+    let bonus = 0;
+    let evidence = "";
+    const matchedTags = [];
+    const rawRequest = normalizeSearchText(state.requestText);
+    const fullName = normalizeSearchText(shop.name);
+    const directNameMatch = fullName.length >= 3 && rawRequest.includes(fullName);
+    const tokenNameMatch = nameTokens(shop.name).some(token => rawRequest.includes(token));
+
+    if (directNameMatch || tokenNameMatch) {
+      bonus += 44;
+      evidence = "店名";
+    }
+
+    const fields = [
+      { label: "ジャンル", value: shop.genre, cap: 28 },
+      { label: shop.surveyConfirmed ? "店舗アンケート" : "店舗紹介", value: shop.ownerComment, cap: 36 },
+      { label: "店舗紹介", value: shop.publicSummary, cap: 32 },
+      { label: "はしごポンの紹介", value: shop.ponComment, cap: 24 },
+      { label: "エリア情報", value: `${shop.area || ""} ${shop.accessNote || ""}`, cap: 18 }
+    ];
+
+    let bestTextMatch = 0;
+    fields.forEach(field => {
+      const commonLength = longestCommonSubstringLength(request, normalizeSearchText(field.value));
+      if (commonLength < 3) return;
+      const fieldBonus = Math.min(field.cap, 6 + (commonLength - 3) * 5);
+      if (fieldBonus > bestTextMatch) {
+        bestTextMatch = fieldBonus;
+        if (!evidence || evidence !== "店名") evidence = field.label;
+      }
+    });
+    bonus += bestTextMatch;
+
+    const shopTags = allShopTags(shop);
+    allShopTags(shop).forEach(tag => {
+      const label = normalizeSearchText(tagLabel(tag));
+      if (label.length >= 2 && rawRequest.includes(label)) matchedTags.push(tag);
+    });
+    const relatedTagHits = requestTags(state.requestText).filter(tag => shopTags.includes(tag));
+    matchedTags.push(...relatedTagHits);
+    if (relatedTagHits.length && !evidence) evidence = "店舗情報";
+    bonus += Math.min(42, [...new Set(matchedTags)].length * 9);
+
+    return { bonus, tags: [...new Set(matchedTags)], evidence };
+  }
+
+  function craftBeerRequested() {
+    return state.answers.preference?.preference === "craft_beer"
+      || requestTags(state.requestText).includes("craft_beer");
+  }
+
+  function shopHasCraftBeer(shop) {
+    return shop.drinkTags.includes("craft_beer");
+  }
+
+  const originalScoreShop = scoreShop;
+  scoreShop = function scoreShopWithTextAndCraftPriority(shop, status) {
+    const result = originalScoreShop(shop, status);
+    const requestMatch = shopRequestMatch(shop);
+    let score = result.score + requestMatch.bonus;
+    let percentAdjustment = Math.min(6, Math.floor(requestMatch.bonus / 8));
+    const matchedTags = new Set([...result.matchedTags, ...requestMatch.tags]);
+
+    if (craftBeerRequested()) {
+      if (shopHasCraftBeer(shop)) {
+        score += 42;
+        percentAdjustment += 6;
+        matchedTags.add("craft_beer");
+        if (shop.drinkTags.includes("local_beer")) {
+          score += 7;
+          matchedTags.add("local_beer");
+        }
+      } else {
+        score -= 24;
+        percentAdjustment -= 6;
+      }
+    }
+
+    return {
+      ...result,
+      score,
+      compatibilityPercent: Math.min(98, Math.max(52, result.compatibilityPercent + percentAdjustment)),
+      matchedTags: [...matchedTags]
+    };
+  };
+
+  const originalRecommendReason = recommendReason;
+  recommendReason = function recommendReasonWithEvidence(shop, status, tags) {
+    const lead = [];
+    if (craftBeerRequested() && shopHasCraftBeer(shop)) {
+      lead.push("クラフトビール取扱店として優先");
+    }
+    const requestMatch = shopRequestMatch(shop);
+    if (requestMatch.bonus >= 8 && requestMatch.evidence) {
+      lead.push(`${requestMatch.evidence}と追加条件が近い`);
+    }
+    const base = originalRecommendReason(shop, status, tags);
+    return lead.length ? `${lead.join("。")}。${base}` : base;
+  };
+
   state.seenPickIds = [];
 
   const originalStartApp = startApp;
@@ -7,35 +226,74 @@
     return originalStartApp();
   };
 
+  function rememberPicks(picks) {
+    state.currentPickIds = picks.map(item => item.shop.id);
+    state.seenPickIds = [...new Set([...(state.seenPickIds || []), ...state.currentPickIds])];
+    return picks;
+  }
+
+  function chooseFromRanked(candidates, count = 3) {
+    if (candidates.length <= count) return [...candidates];
+    const window = candidates.slice(0, Math.min(6, candidates.length));
+    return shuffle(window).slice(0, count).sort((left, right) => right.score - left.score);
+  }
+
   const originalSelectRecommendations = selectRecommendations;
-  selectRecommendations = function selectRecommendationsWithRotation(alternate = false) {
-    if (!alternate) {
-      const picks = originalSelectRecommendations(false);
-      state.seenPickIds = [...new Set([...(state.seenPickIds || []), ...picks.map(item => item.shop.id)])];
-      return picks;
+  selectRecommendations = function selectRecommendationsWithPriorityRotation(alternate = false) {
+    if (!alternate && !craftBeerRequested()) {
+      return rememberPicks(originalSelectRecommendations(false));
     }
 
     let ranked = getScores();
+    if (!alternate) {
+      const openNow = ranked.filter(item => item.status.open);
+      if (openNow.length >= 3) ranked = openNow;
+    }
     if (state.answers.people?.people === "large_group") {
       const groupReady = ranked.filter(item => item.shop.sizeTag !== "small_shop");
       if (groupReady.length >= 3) ranked = groupReady;
+    }
+
+    if (!alternate) {
+      const craftRanked = ranked.filter(item => shopHasCraftBeer(item.shop));
+      const otherRanked = ranked.filter(item => !shopHasCraftBeer(item.shop));
+      const picks = craftRanked.length >= 3
+        ? (state.requestText
+          ? craftRanked.slice(0, 3)
+          : [craftRanked[0], ...shuffle(craftRanked.slice(1, 6)).slice(0, 2)])
+        : [...craftRanked, ...otherRanked].slice(0, 3);
+      return rememberPicks(picks.sort((left, right) => right.score - left.score));
     }
 
     const currentIds = state.currentPickIds || [];
     const seenIds = state.seenPickIds || [];
     let candidates = ranked.filter(item => !currentIds.includes(item.shop.id) && !seenIds.includes(item.shop.id));
 
-    if (candidates.length < 3) {
+    if (candidates.length > 0 && candidates.length < 3) {
+      const mandatoryIds = new Set(candidates.map(item => item.shop.id));
+      const fillers = ranked.filter(item => !currentIds.includes(item.shop.id) && !mandatoryIds.has(item.shop.id));
+      const picks = [...candidates, ...fillers.slice(0, 3 - candidates.length)];
+      return rememberPicks(picks.sort((left, right) => right.score - left.score));
+    }
+    if (!candidates.length) {
       candidates = ranked.filter(item => !currentIds.includes(item.shop.id));
       state.seenPickIds = [...currentIds];
     }
     if (candidates.length < 3) candidates = ranked;
 
-    const picks = shuffle(candidates).slice(0, Math.min(3, candidates.length));
-    picks.sort((a, b) => b.score - a.score);
-    state.currentPickIds = picks.map(item => item.shop.id);
-    state.seenPickIds = [...new Set([...state.seenPickIds, ...state.currentPickIds])];
-    return picks;
+    let picks = [];
+    if (craftBeerRequested()) {
+      const craftCandidates = candidates.filter(item => shopHasCraftBeer(item.shop));
+      picks = chooseFromRanked(craftCandidates, Math.min(3, craftCandidates.length));
+      if (picks.length < 3) {
+        const pickedIds = new Set(picks.map(item => item.shop.id));
+        const others = candidates.filter(item => !pickedIds.has(item.shop.id) && !shopHasCraftBeer(item.shop));
+        picks.push(...chooseFromRanked(others, 3 - picks.length));
+      }
+    } else {
+      picks = chooseFromRanked(candidates, Math.min(3, candidates.length));
+    }
+    return rememberPicks(picks.sort((left, right) => right.score - left.score));
   };
 
   document.addEventListener("click", async event => {
@@ -54,7 +312,8 @@
 
     submitButton.disabled = true;
     state.requestText = requestText;
-    track("refine", { text: requestText });
+    addUserMessage(requestText);
+    track("refine", { text: requestText, tags: requestTags(requestText) });
     setPonImage("good");
 
     const reaction = document.createElement("div");
@@ -62,7 +321,7 @@
     reaction.setAttribute("role", "status");
     reaction.innerHTML = `
       <img src="${HASHIGOPON_IMAGES.good}" alt="反応するはしごポン">
-      <p>なるほど。その条件も入れてみる。ちょっと待て、選び直すぞ。</p>
+      <p>なるほど。その条件も入れてみる。店舗の紹介やアンケートまで見て、選び直すぞ。</p>
     `;
     els.refineArea.prepend(reaction);
 
@@ -70,4 +329,12 @@
     state.currentPickIds = [];
     showResults(false);
   }, true);
+
+  window.hashigoponEnhancements = {
+    normalizeSearchText,
+    requestTags: text => requestTags(text),
+    shopRequestMatch,
+    craftBeerRequested,
+    shopHasCraftBeer
+  };
 })();
