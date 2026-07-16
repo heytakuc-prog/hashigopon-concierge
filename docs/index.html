@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>縺ｯ縺励＃繝昴Φ縺ｫ閨槭＞縺ｦ縺ｿ繧医≧・・/title>
+  <title>はしごポンに聞いてみよう！</title>
   <style>
     :root {
       --ink: #2b2018;
@@ -117,13 +117,13 @@
     }
 
     .status-card summary::after {
-      content: "・・;
+      content: "＋";
       float: right;
       color: var(--muted);
     }
 
     .status-card[open] summary::after {
-      content: "竏・;
+      content: "−";
     }
 
     .status-card p {
@@ -776,7 +776,7 @@
       }
 
       .topbar span:first-child::after {
-        content: "縺ｯ縺励＃驟偵さ繝ｳ繧ｷ繧ｧ繝ｫ繧ｸ繝･";
+        content: "はしご酒コンシェルジュ";
         font-size: 12px;
       }
 
@@ -858,59 +858,59 @@
 <body>
   <div class="page">
     <div class="topbar">
-      <span>譚ｾ謌ｸ繧ｯ繝ｩ繝輔ヨ繝薙・繝ｫ繝輔ぉ繧ｹ 縺ｯ縺励＃驟偵さ繝ｳ繧ｷ繧ｧ繝ｫ繧ｸ繝･</span>
-      <span>譚ｾ謌ｸ縺ｮ螟懊∵ｬ｡縺ｮ荳霆偵ｒ謗｢縺・/span>
+      <span>松戸クラフトビールフェス はしご酒コンシェルジュ</span>
+      <span>松戸の夜、次の一軒を探す</span>
     </div>
 
     <main class="main">
-      <section class="hero-copy" aria-label="繧｢繝励Μ邏ｹ莉・>
-        <img class="hero-banner" src="./assets/hashigopon-banner.png" alt="縺ｯ縺励＃繝昴Φ縺ｫ閨槭＞縺ｦ縺ｿ繧医≧・・譚ｾ謌ｸ縺ｮ縺翫＞縺励＞荳霆偵ｒ謗｢縺吶・繝ｳ">
+      <section class="hero-copy" aria-label="アプリ紹介">
+        <img class="hero-banner" src="./assets/hashigopon-banner.png" alt="はしごポンに聞いてみよう！ 松戸のおいしい一軒を探すポン">
         <div class="pon-stage">
-          <img class="hashigopon" id="ponImage" src="./assets/hashigopon-normal.png" alt="縺ｯ縺励＃繝昴Φ">
+          <img class="hashigopon" id="ponImage" src="./assets/hashigopon-normal.png" alt="はしごポン">
           <details class="status-card" id="profile" open>
-            <summary>譛蛻昴↓隱ｭ繧薙〒・壹・縺励＃繝昴Φ縺ｨ縺ｯ</summary>
-            <p>譚ｾ謌ｸ縺ｮ螟懊↓隧ｳ縺励＞縲∬ｦ九◆逶ｮ縺ｯ繧・ｋ縺・ち繝後く縺ｮ譯亥・蠖ｹ縲ゅ◆繧∝哨縺ｧ蟆代＠豈定・縺縺代←謔ｪ豌励・縺ゅｊ縺ｾ縺帙ｓ縲・蝠上・遲斐∴縺九ｉ逶ｸ諤ｧ縺ｮ濶ｯ縺・ｺ励ｒ謗｢縺励・｣ｲ縺ｿ縺吶℃縺ｫ縺ｯ縺｡繧・ｓ縺ｨ豁｢繧√↓蜈･繧翫∪縺吶・/p>
+            <summary>最初に読んで：はしごポンとは</summary>
+            <p>松戸の夜に詳しい、見た目はゆるいタヌキの案内役。ため口で少し毒舌だけど悪気はありません。8問の答えから相性の良い店を探し、飲みすぎにはちゃんと止めに入ります。</p>
           </details>
         </div>
       </section>
 
-      <section class="panel" id="questionArea" aria-label="縺ｯ縺励＃繝昴Φ縺ｨ縺ｮ莨夊ｩｱ">
+      <section class="panel" id="questionArea" aria-label="はしごポンとの会話">
         <div class="progress">
-          <span id="progress">貅門ｙ荳ｭ</span>
+          <span id="progress">準備中</span>
           <div class="dots" id="dots" aria-hidden="true"></div>
         </div>
         <div class="conversation" id="conversation"></div>
         <div class="typing" id="typing" aria-hidden="true"><span></span><span></span><span></span></div>
         <div class="answers" id="answers"></div>
-        <div class="thinking" id="thinking">縺ｯ縺励＃繝昴Φ縺梧收謌ｸ縺ｮ螟懊ｒ諤昴＞蜃ｺ縺励※縺・∪縺・..</div>
+        <div class="thinking" id="thinking">はしごポンが松戸の夜を思い出しています...</div>
       </section>
     </main>
 
-    <section class="results" id="results" aria-label="縺翫☆縺吶ａ邨先棡">
+    <section class="results" id="results" aria-label="おすすめ結果">
       <div class="diagnosis">
-        <img id="diagnosisImage" src="./assets/hashigopon-recommend.png" alt="縺翫☆縺吶ａ縺吶ｋ縺ｯ縺励＃繝昴Φ">
+        <img id="diagnosisImage" src="./assets/hashigopon-recommend.png" alt="おすすめするはしごポン">
         <div>
-          <h2 id="diagnosisTitle">莉翫・縺ゅ↑縺溘↓縺翫☆縺吶ａ</h2>
+          <h2 id="diagnosisTitle">今のあなたにおすすめ</h2>
           <p id="diagnosisText"></p>
         </div>
       </div>
       <div class="store-grid" id="storeGrid"></div>
       <div class="feedback">
         <div class="feedback-inner">
-          <img id="feedbackImage" src="./assets/hashigopon-satisfied.png" alt="諢滓Φ繧定◇縺上・縺励＃繝昴Φ">
+          <img id="feedbackImage" src="./assets/hashigopon-satisfied.png" alt="感想を聞くはしごポン">
           <div>
-            <h2>縺ｧ縲√←縺・□縺｣縺滂ｼ・/h2>
+            <h2>で、どうだった？</h2>
             <div class="feedback-options">
-              <button type="button" data-feedback="good">縺・＞諢溘§</button>
-              <button type="button" data-feedback="bad">縺｡繧・▲縺ｨ驕輔≧</button>
-              <button type="button" id="retryButton">繧ゅ≧荳蝗槭ｄ繧・/button>
+              <button type="button" data-feedback="good">いい感じ</button>
+              <button type="button" data-feedback="bad">ちょっと違う</button>
+              <button type="button" id="retryButton">もう一回やる</button>
             </div>
           </div>
         </div>
       </div>
       <div class="again-row">
-        <button type="button" id="randomButton">蛻･縺ｮ3霆偵ｒ隕九ｋ</button>
-        <button type="button" id="refineButton">譚｡莉ｶ繧剃ｸ險雜ｳ縺・/button>
+        <button type="button" id="randomButton">別の3軒を見る</button>
+        <button type="button" id="refineButton">条件を一言足す</button>
       </div>
       <div class="refine-area" id="refineArea" hidden></div>
     </section>
