@@ -1,48 +1,48 @@
 (() => {
   const EXTRA_REQUEST_KEYWORDS = [
-    { words: ["繧ｯ繝ｩ繝輔ヨ繝薙・繝ｫ", "繧ｯ繝ｩ繝輔ヨ", "蝨ｰ繝薙・繝ｫ", "繝ｭ繝ｼ繧ｫ繝ｫ繝薙・繝ｫ", "繧ｫ繝翫ム繝薙・繝ｫ", "繧ｿ繝・・繝薙・繝ｫ"], tags: ["craft_beer", "beer"] },
-    { words: ["譚ｾ謌ｸ繝薙・繝ｫ", "譚ｾ謌ｸ縺ｮ繝薙・繝ｫ"], tags: ["local_beer", "craft_beer", "beer"] },
-    { words: ["譌･譛ｬ驟・, "蝨ｰ驟・], tags: ["sake"] },
-    { words: ["辟ｼ驟・], tags: ["shochu"] },
-    { words: ["繝ｯ繧､繝ｳ", "闡｡關・・"], tags: ["wine"] },
-    { words: ["繧ｫ繧ｯ繝・Ν"], tags: ["cocktail"] },
-    { words: ["繧ｦ繧､繧ｹ繧ｭ繝ｼ", "繝上う繝懊・繝ｫ"], tags: ["whisky", "highball"] },
-    { words: ["繧ｵ繝ｯ繝ｼ", "驟弱ワ繧､"], tags: ["sour"] },
-    { words: ["辟ｼ縺埼ｳ･", "辟ｼ魑･", "荳ｲ辟ｼ縺・, "荳ｲ繧ゅ・"], tags: ["yakitori", "meat"] },
-    { words: ["繧ｸ繝薙お", "鮖ｿ閧・, "迪ｪ閧・], tags: ["game_meat", "meat"] },
-    { words: ["閧画侭逅・, "縺願ｉ", "閧峨′鬟溘∋縺溘＞"], tags: ["meat", "full_meal"] },
-    { words: ["鬢・ｭ・, "繧ｮ繝ｧ繝ｼ繧ｶ"], tags: ["gyoza", "chinese"] },
-    { words: ["荳ｭ闖ｯ", "荳ｭ蝗ｽ譁咏炊"], tags: ["chinese", "full_meal"] },
-    { words: ["繝ｩ繝ｼ繝｡繝ｳ", "諡・・ｺｺ", "鮗ｺ縺ｧ邱繧・, "鮗ｺ鬘・], tags: ["noodles", "closing"] },
-    { words: ["繝斐じ", "繝斐ャ繝・ぃ", "遏ｳ遯ｯ"], tags: ["pizza", "italian"] },
-    { words: ["繝代せ繧ｿ", "繧､繧ｿ繝ｪ繧｢繝ｳ"], tags: ["pasta", "italian"] },
-    { words: ["鬲壽侭逅・, "豬ｷ魄ｮ", "蛻ｺ霄ｫ", "鬲壹′鬟溘∋縺溘＞"], tags: ["seafood", "full_meal"] },
-    { words: ["驥手除", "譛画ｩ滄㍽闖・, "繧ｪ繝ｼ繧ｬ繝九ャ繧ｯ"], tags: ["vegetables"] },
-    { words: ["繧ｫ繝ｬ繝ｼ"], tags: ["curry", "international"] },
-    { words: ["逡ｰ蝗ｽ譁咏炊", "螟壼嵜邀・, "荳也阜縺ｮ譁咏炊", "豬ｷ螟匁侭逅・], tags: ["international", "curious"] },
-    { words: ["繝上Ρ繧､", "繝上Ρ繧､繧｢繝ｳ"], tags: ["hawaiian"] },
-    { words: ["繧｢繝｡繝ｪ繧ｫ繝ｳ", "繧ｵ繝ｳ繝峨う繝・メ"], tags: ["american", "sandwich"] },
-    { words: ["繝薙せ繝医Ο"], tags: ["bistro"] },
-    { words: ["繧ｳ繝ｼ繝偵・", "迴育栖", "繧ｫ繝輔ぉ"], tags: ["coffee"] },
-    { words: ["繝・じ繝ｼ繝・, "逕倥＞繧ゅ・", "繧ｹ繧､繝ｼ繝・], tags: ["dessert"] },
-    { words: ["繝・Λ繧ｹ", "螟夜｣ｲ縺ｿ", "螟悶・蟶ｭ"], tags: ["open_air"] },
-    { words: ["蠎嶺ｸｻ縺ｨ隧ｱ", "繧ｹ繧ｿ繝・ヵ縺ｨ隧ｱ", "蠎怜藤縺ｨ隧ｱ"], tags: ["talk_owner", "homey"] },
-    { words: ["蛻昴ａ縺ｦ", "蜈･繧翫ｄ縺吶＞", "荳隕九〒繧・], tags: ["first_visit", "casual"] },
-    { words: ["遨ｴ蝣ｴ", "髫繧悟ｮｶ"], tags: ["hidden"] },
-    { words: ["髱吶°", "關ｽ縺｡逹縺・※", "繧・▲縺上ｊ隧ｱ"], tags: ["calm", "quiet_drink", "slow_talk"] },
-    { words: ["縺ｫ縺弱ｄ縺・, "雉代ｄ縺・, "繝ｯ繧､繝ｯ繧､", "逶帙ｊ荳翫′繧・], tags: ["lively", "party", "group_fun"] }
+    { words: ["クラフトビール", "クラフト", "地ビール", "ローカルビール", "カナダビール", "タップビール"], tags: ["craft_beer", "beer"] },
+    { words: ["松戸ビール", "松戸のビール"], tags: ["local_beer", "craft_beer", "beer"] },
+    { words: ["日本酒", "地酒"], tags: ["sake"] },
+    { words: ["焼酎"], tags: ["shochu"] },
+    { words: ["ワイン", "葡萄酒"], tags: ["wine"] },
+    { words: ["カクテル"], tags: ["cocktail"] },
+    { words: ["ウイスキー", "ハイボール"], tags: ["whisky", "highball"] },
+    { words: ["サワー", "酎ハイ"], tags: ["sour"] },
+    { words: ["焼き鳥", "焼鳥", "串焼き", "串もの"], tags: ["yakitori", "meat"] },
+    { words: ["ジビエ", "鹿肉", "猪肉"], tags: ["game_meat", "meat"] },
+    { words: ["肉料理", "お肉", "肉が食べたい"], tags: ["meat", "full_meal"] },
+    { words: ["餃子", "ギョーザ"], tags: ["gyoza", "chinese"] },
+    { words: ["中華", "中国料理"], tags: ["chinese", "full_meal"] },
+    { words: ["ラーメン", "担々麺", "麺で締め", "麺類"], tags: ["noodles", "closing"] },
+    { words: ["ピザ", "ピッツァ", "石窯"], tags: ["pizza", "italian"] },
+    { words: ["パスタ", "イタリアン"], tags: ["pasta", "italian"] },
+    { words: ["魚料理", "海鮮", "刺身", "魚が食べたい"], tags: ["seafood", "full_meal"] },
+    { words: ["野菜", "有機野菜", "オーガニック"], tags: ["vegetables"] },
+    { words: ["カレー"], tags: ["curry", "international"] },
+    { words: ["異国料理", "多国籍", "世界の料理", "海外料理"], tags: ["international", "curious"] },
+    { words: ["ハワイ", "ハワイアン"], tags: ["hawaiian"] },
+    { words: ["アメリカン", "サンドイッチ"], tags: ["american", "sandwich"] },
+    { words: ["ビストロ"], tags: ["bistro"] },
+    { words: ["コーヒー", "珈琲", "カフェ"], tags: ["coffee"] },
+    { words: ["デザート", "甘いもの", "スイーツ"], tags: ["dessert"] },
+    { words: ["テラス", "外飲み", "外の席"], tags: ["open_air"] },
+    { words: ["店主と話", "スタッフと話", "店員と話"], tags: ["talk_owner", "homey"] },
+    { words: ["初めて", "入りやすい", "一見でも"], tags: ["first_visit", "casual"] },
+    { words: ["穴場", "隠れ家"], tags: ["hidden"] },
+    { words: ["静か", "落ち着いて", "ゆっくり話"], tags: ["calm", "quiet_drink", "slow_talk"] },
+    { words: ["にぎやか", "賑やか", "ワイワイ", "盛り上がり"], tags: ["lively", "party", "group_fun"] }
   ];
 
   const GENERIC_REQUEST_WORDS = [
-    "縺翫☆縺吶ａ", "縺雁ｺ・, "蠎励ｒ", "蠎励′", "縺ｨ縺薙ｍ", "謗｢縺励※", "驕ｸ繧薙〒", "陦後″縺溘＞", "縺ゅｊ縺ｾ縺吶°",
-    "縺ゅｋ縺九↑", "鬟ｲ縺ｿ縺溘＞", "鬟溘∋縺溘＞", "縺励◆縺・, "縺後＞縺・, "諢溘§", "蟶梧悍", "譚｡莉ｶ", "縺企｡倥＞"
+    "おすすめ", "お店", "店を", "店が", "ところ", "探して", "選んで", "行きたい", "ありますか",
+    "あるかな", "飲みたい", "食べたい", "したい", "がいい", "感じ", "希望", "条件", "お願い"
   ];
 
   function normalizeSearchText(value) {
     return String(value || "")
       .normalize("NFKC")
       .toLowerCase()
-      .replace(/[縺・繧望/g, char => String.fromCharCode(char.charCodeAt(0) + 0x60))
+      .replace(/[ぁ-ゖ]/g, char => String.fromCharCode(char.charCodeAt(0) + 0x60))
       .replace(/[^\p{L}\p{N}]/gu, "");
   }
 
@@ -107,9 +107,9 @@
   };
 
   function nameTokens(name) {
-    const ignored = new Set(["譚ｾ謌ｸ", "譚ｾ謌ｸ蠎・, "蠎苓・", "繧ｫ繝輔ぉ", "繝舌・"]);
+    const ignored = new Set(["松戸", "松戸店", "店舗", "カフェ", "バー"]);
     return String(name || "")
-      .split(/[\s繝ｻ&・・・・)・茨ｼ峨舌曽+/)
+      .split(/[\s・&＆/／()（）【】]+/)
       .map(normalizeSearchText)
       .filter(token => token.length >= 3 && !ignored.has(token));
   }
@@ -128,15 +128,15 @@
 
     if (directNameMatch || tokenNameMatch) {
       bonus += 44;
-      evidence = "蠎怜錐";
+      evidence = "店名";
     }
 
     const fields = [
-      { label: "繧ｸ繝｣繝ｳ繝ｫ", value: shop.genre, cap: 28 },
-      { label: shop.surveyConfirmed ? "蠎苓・繧｢繝ｳ繧ｱ繝ｼ繝・ : "蠎苓・邏ｹ莉・, value: shop.ownerComment, cap: 36 },
-      { label: "蠎苓・邏ｹ莉・, value: shop.publicSummary, cap: 32 },
-      { label: "縺ｯ縺励＃繝昴Φ縺ｮ邏ｹ莉・, value: shop.ponComment, cap: 24 },
-      { label: "繧ｨ繝ｪ繧｢諠・ｱ", value: `${shop.area || ""} ${shop.accessNote || ""}`, cap: 18 }
+      { label: "ジャンル", value: shop.genre, cap: 28 },
+      { label: shop.surveyConfirmed ? "店舗アンケート" : "店舗紹介", value: shop.ownerComment, cap: 36 },
+      { label: "店舗紹介", value: shop.publicSummary, cap: 32 },
+      { label: "はしごポンの紹介", value: shop.ponComment, cap: 24 },
+      { label: "エリア情報", value: `${shop.area || ""} ${shop.accessNote || ""}`, cap: 18 }
     ];
 
     let bestTextMatch = 0;
@@ -146,7 +146,7 @@
       const fieldBonus = Math.min(field.cap, 6 + (commonLength - 3) * 5);
       if (fieldBonus > bestTextMatch) {
         bestTextMatch = fieldBonus;
-        if (!evidence || evidence !== "蠎怜錐") evidence = field.label;
+        if (!evidence || evidence !== "店名") evidence = field.label;
       }
     });
     bonus += bestTextMatch;
@@ -158,7 +158,7 @@
     });
     const relatedTagHits = requestTags(state.requestText).filter(tag => shopTags.includes(tag));
     matchedTags.push(...relatedTagHits);
-    if (relatedTagHits.length && !evidence) evidence = "蠎苓・諠・ｱ";
+    if (relatedTagHits.length && !evidence) evidence = "店舗情報";
     bonus += Math.min(42, [...new Set(matchedTags)].length * 9);
 
     return { bonus, tags: [...new Set(matchedTags)], evidence };
@@ -208,14 +208,14 @@
   recommendReason = function recommendReasonWithEvidence(shop, status, tags) {
     const lead = [];
     if (craftBeerRequested() && shopHasCraftBeer(shop)) {
-      lead.push("繧ｯ繝ｩ繝輔ヨ繝薙・繝ｫ蜿匁桶蠎励→縺励※蜆ｪ蜈・);
+      lead.push("クラフトビール取扱店として優先");
     }
     const requestMatch = shopRequestMatch(shop);
     if (requestMatch.bonus >= 8 && requestMatch.evidence) {
-      lead.push(`${requestMatch.evidence}縺ｨ霑ｽ蜉譚｡莉ｶ縺瑚ｿ代＞`);
+      lead.push(`${requestMatch.evidence}と追加条件が近い`);
     }
     const base = originalRecommendReason(shop, status, tags);
-    return lead.length ? `${lead.join("縲・)}縲・{base}` : base;
+    return lead.length ? `${lead.join("。")}。${base}` : base;
   };
 
   state.seenPickIds = [];
@@ -265,14 +265,14 @@
   }
 
   function renderRequiredRefine() {
-    els.progress.textContent = "縺ゅ→1縺､・亥ｿ・茨ｼ・;
+    els.progress.textContent = "あと1つ（必須）";
     els.answers.innerHTML = `
       <div class="request-box required-refine-box">
-        <label for="requiredRefineInput">蛟呵｣懊′諡ｮ謚励＠縺ｦ繧九ゅ≠縺ｨ荳險縺縺第擅莉ｶ繧呈蕗縺医※・亥ｿ・茨ｼ・/label>
-        <p>譁咏炊繝ｻ縺企・繝ｻ蠎励・髮ｰ蝗ｲ豌励↑縺ｩ縲√＞縺｡縺ｰ繧灘､悶○縺ｪ縺・擅莉ｶ繧貞・繧後※縲・/p>
+        <label for="requiredRefineInput">候補が拮抗してる。あと一言だけ条件を教えて（必須）</label>
+        <p>料理・お酒・店の雰囲気など、いちばん外せない条件を入れて。</p>
         <textarea id="requiredRefineInput" class="request-input" rows="3" maxlength="100" required
-          placeholder="萓具ｼ壹け繝ｩ繝輔ヨ繝薙・繝ｫ・上ず繝薙お・城撕縺九↓隧ｱ縺帙ｋ蠎・></textarea>
-        <button id="requiredRefineSubmit" class="answer-button primary" type="button">縺薙・譚｡莉ｶ縺ｧ繝吶せ繝・繧貞・縺・/button>
+          placeholder="例：クラフトビール／ジビエ／静かに話せる店"></textarea>
+        <button id="requiredRefineSubmit" class="answer-button primary" type="button">この条件でベスト3を出す</button>
       </div>
     `;
 
@@ -283,7 +283,7 @@
     button?.addEventListener("click", async () => {
       const requestText = input?.value.trim() || "";
       if (!requestText) {
-        toast("縺薙％縺ｯ蠢・医ゅ＞縺｡縺ｰ繧灘､悶○縺ｪ縺・擅莉ｶ繧剃ｸ險蜈･繧後※縲・);
+        toast("ここは必須。いちばん外せない条件を一言入れて。");
         input?.focus();
         return;
       }
@@ -292,7 +292,7 @@
       state.requestText = requestText;
       addUserMessage(requestText);
       track("required_refine", { text: requestText, tags: requestTags(requestText) });
-      await ponSay("繧医＠縲ゅ◎縺ｮ譚｡莉ｶ縺ｾ縺ｧ蜈･繧後※縲∵悽蠖薙↓逶ｸ諤ｧ縺後＞縺・・繧ｹ繝・繧貞・縺吶・, "good");
+      await ponSay("よし。その条件まで入れて、本当に相性がいいベスト3を出す。", "good");
       els.answers.innerHTML = "";
       showResults(false);
     });
@@ -310,7 +310,7 @@
     setPonImage("thinking");
     await wait(1100);
     els.thinking.classList.remove("show");
-    await ponSay(["蛟呵｣懊′縺九↑繧頑彊謚励＠縺ｦ繧九・, "驕ｩ蠖薙↓3霆貞・縺吶・縺ｯ驕輔≧縺ｪ縲ゅ≠縺ｨ荳險縺縺第擅莉ｶ繧定ｶｳ縺励※縲・], "thinking");
+    await ponSay(["候補がかなり拮抗してる。", "適当に3軒出すのは違うな。あと一言だけ条件を足して。"], "thinking");
     renderRequiredRefine();
   };
 
@@ -366,7 +366,7 @@
     const input = els.refineArea.querySelector("#refineInput");
     const requestText = input?.value.trim() || "";
     if (!requestText) {
-      toast("譚｡莉ｶ繧剃ｸ險蜈･繧後※縺上ｌ");
+      toast("条件を一言入れてくれ");
       return;
     }
 
@@ -380,8 +380,8 @@
     reaction.className = "refine-reaction";
     reaction.setAttribute("role", "status");
     reaction.innerHTML = `
-      <img src="${HASHIGOPON_IMAGES.good}" alt="蜿榊ｿ懊☆繧九・縺励＃繝昴Φ">
-      <p>縺ｪ繧九⊇縺ｩ縲ゅ◎縺ｮ譚｡莉ｶ繧ょ・繧後※縺ｿ繧九ょｺ苓・縺ｮ邏ｹ莉九ｄ繧｢繝ｳ繧ｱ繝ｼ繝医∪縺ｧ隕九※縲・∈縺ｳ逶ｴ縺吶◇縲・/p>
+      <img src="${HASHIGOPON_IMAGES.good}" alt="反応するはしごポン">
+      <p>なるほど。その条件も入れてみる。店舗の紹介やアンケートまで見て、選び直すぞ。</p>
     `;
     els.refineArea.prepend(reaction);
 
