@@ -11,8 +11,8 @@ const HASHIGOPON_IMAGES = {
 };
 
 const SHOP_CSV_URL = "./shop-data.csv";
-const ACTIVE_EVENT_ZONE = document.documentElement.dataset.eventZone || "matsudo";
-const MAX_QUESTIONS = 5;
+const ACTIVE_EVENT_ZONE = document.documentElement.dataset.eventZone || "matsudo_station";
+const MAX_QUESTIONS = 8;
 
 const state = {
   shops: [],
@@ -83,6 +83,16 @@ const QUESTIONS = [
     ]
   },
   {
+    id: "round",
+    text: "今、何軒目？ ここはごまかすなよ。",
+    options: [
+      ["これから1軒目", { round: "first", tags: ["first_round", "full_meal"] }, "good", ["まだ真っ白な状態か。", "最初からちゃんと楽しめる店を見る。"]],
+      ["2軒目", { round: "second", tags: ["second_round", "second_round_welcome", "light_drink"] }, "bad", ["はいはい、エンジンかかってるね。", "二軒目歓迎の店を強めに見る。"]],
+      ["3軒目以降", { round: "late", tags: ["third_round", "late_round_welcome", "closing", "quick_finish"] }, "surprise", ["まだ行くの？ 元気だな。", "締めや遅めでも寄りやすい店を見る。無理はするなよ。"]],
+      ["もう覚えてない", { safeExit: true, round: "unknown", tags: [] }, "tsukkomi", ["じゃあ店を探してる場合じゃない。", "水を飲んで帰れ。今日は終了。"]]
+    ]
+  },
+  {
     id: "budget",
     text: "予算はどのくらい？",
     options: [
@@ -106,13 +116,36 @@ const QUESTIONS = [
   },
   {
     id: "foodDrink",
-    text: "最後。食べたい？ 飲みたい？",
+    text: "食べたい？ 飲みたい？",
     options: [
       ["とにかく飲みたい", { purpose: "drink", tags: ["light_drink"] }, "good", ["飲み中心だな。", "ただし水もたまに入れろよ。"]],
       ["ご飯もしっかり", { purpose: "food", tags: ["full_meal"] }, "good", ["ちゃんと食べるのは正解。", "食事が強い店で見る。"]],
       ["軽くつまみながら", { purpose: "snack", tags: ["light_drink", "snacks"] }, "normal", ["二軒目っぽくていい。", "つまみのある店を上げる。"]],
       ["締めを食べたい", { purpose: "closing", tags: ["closing", "noodles"] }, "satisfied", ["締めまで行く気だな。", "炭水化物の気配を探す。"]],
       ["どっちも大事", { purpose: "both", tags: ["full_meal", "light_drink"] }, "bad", ["欲張りだな。", "まあ、そのくらいが楽しい。"]]
+    ]
+  },
+  {
+    id: "preference",
+    text: "で、何が気になる？ 一番近いやつを選べ。",
+    options: [
+      ["クラフトビール", { preference: "craft_beer", tags: ["craft_beer", "beer", "local_beer"] }, "good", ["そこは外せない、と。", "ビールに強い店を上げる。"]],
+      ["ワイン・カクテル", { preference: "wine_cocktail", tags: ["wine", "cocktail"] }, "bad", ["ちょっと洒落たいんだな。", "酒と雰囲気、両方見る。"]],
+      ["日本酒・ウイスキー", { preference: "sake_whisky", tags: ["sake", "whisky", "shochu"] }, "normal", ["じっくり飲む方ね。", "その辺に強い店を探す。"]],
+      ["肉・串焼き", { preference: "meat", tags: ["meat", "yakitori", "game_meat"] }, "good", ["わかりやすくて助かる。", "肉の気配が濃い店を見る。"]],
+      ["ピザ・パスタ", { preference: "italian", tags: ["pizza", "pasta", "italian"] }, "satisfied", ["みんなで囲むなら強いな。", "イタリアン寄りを見ておく。"]],
+      ["中華・餃子・麺", { preference: "chinese", tags: ["chinese", "gyoza", "noodles"] }, "good", ["腹が決まってるじゃん。", "中華と締めの候補を上げる。"]],
+      ["魚・野菜・軽いもの", { preference: "light_food", tags: ["seafood", "vegetables", "snacks"] }, "normal", ["重すぎない方がいい、と。", "つまみや料理の相性を見る。"]],
+      ["なんでもいい", { preference: "any", tags: [] }, "tired", ["一番困る答えだな。", "まあ、店側との相性で決めてやる。"]]
+    ]
+  },
+  {
+    id: "distance",
+    text: "最後。どこまで行ける？",
+    options: [
+      ["駅から近い方がいい", { distance: "near", allZones: false, tags: [] }, "normal", ["歩きたくない顔してるな。", "松戸駅の近場を優先する。"]],
+      ["10分くらいなら歩く", { distance: "walk", allZones: false, tags: [] }, "good", ["そのくらい動けるなら十分。", "松戸駅周辺を広めに見る。"]],
+      ["遠くても良い店なら行く", { distance: "explore", allZones: true, tags: ["new_encounter", "first_visit"] }, "surprise", ["お、行動力あるじゃん。", "矢切まで候補を広げる。遠いって文句はなしな。"]]
     ]
   }
 ];
@@ -210,7 +243,7 @@ async function loadShopData() {
   const rows = parseCsv(await response.text()).map(normalizeShop);
   const eventShops = rows.filter(shop => !shop.eventZone || shop.eventZone === ACTIVE_EVENT_ZONE);
   if (!eventShops.length) throw new Error(`対象エリア ${ACTIVE_EVENT_ZONE} の店舗がありません`);
-  return eventShops;
+  return rows;
 }
 
 function normalizeShop(row) {
@@ -350,7 +383,11 @@ function requestTags(text) {
 
 function getScores() {
   const now = new Date();
-  const scores = state.shops.map(shop => {
+  const allowAllZones = Boolean(state.answers.distance?.allZones);
+  const candidates = allowAllZones
+    ? state.shops
+    : state.shops.filter(shop => !shop.eventZone || shop.eventZone === ACTIVE_EVENT_ZONE);
+  const scores = candidates.map(shop => {
     const status = getOpenStatus(shop, now);
     return { shop, status, ...scoreShop(shop, status) };
   }).sort((a, b) => b.score - a.score);
@@ -365,7 +402,9 @@ function scoreShop(shop, status) {
     [state.answers.people?.tags || [], [...shop.peopleTags, ...shop.welcomeTags, ...shop.seatTags], 24],
     [state.answers.atmosphere?.tags || [], [...shop.atmosphereTags, ...shop.welcomeTags, ...shop.styleTags], 20],
     [state.answers.foodDrink?.tags || [], [...shop.foodTags, ...shop.welcomeTags, ...shop.styleTags], 18],
-    [state.answers.mood?.tags || [], [...shop.moodTags, ...shop.roundTags, ...shop.welcomeTags], 16]
+    [state.answers.mood?.tags || [], [...shop.moodTags, ...shop.roundTags, ...shop.welcomeTags], 16],
+    [state.answers.round?.tags || [], [...shop.roundTags, ...shop.welcomeTags, ...shop.styleTags], 16],
+    [state.answers.preference?.tags || [], [...shop.drinkTags, ...shop.foodTags, ...shop.styleTags], 22]
   ];
 
   answerGroups.forEach(([answerTags, shopTags, weight]) => {
@@ -394,6 +433,19 @@ function scoreShop(shop, status) {
   if (budget === "medium" && shop.budgetMin <= 3000 && shop.budgetMax <= 4500) score += 12;
   if (budget === "high" && shop.budgetMax >= 4000) score += 12;
   if (budget === "no_limit") score += 12;
+
+  const distance = state.answers.distance?.distance;
+  if (distance === "near") {
+    if (shop.walkMinutes > 0 && shop.walkMinutes <= 3) score += 16;
+    else if (shop.walkMinutes > 0 && shop.walkMinutes <= 5) score += 9;
+    else if (shop.walkMinutes > 5) score -= 7;
+  }
+  if (distance === "walk" && shop.eventZone === ACTIVE_EVENT_ZONE) {
+    score += shop.walkMinutes > 0 && shop.walkMinutes <= 10 ? 10 : 4;
+  }
+  if (distance === "explore") {
+    score += shop.eventZone && shop.eventZone !== ACTIVE_EVENT_ZONE ? 14 : 2;
+  }
 
   return { score, matchedTags: [...new Set(matched)] };
 }
@@ -574,6 +626,9 @@ function sourceLabel(source) {
 }
 
 function distanceLabel(shop) {
+  if (shop.eventZone && shop.eventZone !== ACTIVE_EVENT_ZONE) {
+    return `${shop.area || "別エリア"}・松戸駅周辺から移動あり`;
+  }
   if (shop.area && shop.walkMinutes > 0) return `${shop.area}・会場から徒歩${shop.walkMinutes}分`;
   if (shop.walkMinutes > 0) return `会場から徒歩${shop.walkMinutes}分`;
   return shop.accessNote || shop.area || "距離情報を確認中";
@@ -622,6 +677,7 @@ function validHttpUrl(value) {
 
 function recommendType(shop, status) {
   if (state.answers.people?.people === "large_group" && shop.sizeTag === "small_shop") return "事前確認が必要";
+  if (shop.eventZone && shop.eventZone !== ACTIVE_EVENT_ZONE) return "足を延ばす候補";
   if (!status.open) return "営業時間は要確認";
   if (shop.welcomeTags.includes("closing")) return "締めにおすすめ";
   if (shop.welcomeTags.includes("large_group_welcome")) return "グループ向き";
@@ -635,6 +691,7 @@ function recommendReason(shop, status, tags) {
   const parts = [];
   if (labels.length) parts.push(`${labels.join("・")}が今の条件に近い`);
   if (shop.ownerCommentTags.some(tag => tags.includes(tag))) parts.push("店側の歓迎したい客層とも合っている");
+  if (shop.eventZone && shop.eventZone !== ACTIVE_EVENT_ZONE) parts.push("遠くてもOKなら足を延ばす価値がある");
   if (status.open) parts.push("今の時間も寄りやすい");
   if (!parts.length) return "知らない店を開拓したいならアリ。";
   return `${parts.join("。")}。まあ、悪くないと思うぞ。`;
@@ -655,7 +712,9 @@ function tagLabel(tag) {
     hungry: "食事重視",
     full_meal: "しっかり食事",
     light_drink: "軽く飲む",
+    first_round: "1軒目",
     second_round: "2軒目",
+    third_round: "3軒目以降",
     second_round_welcome: "2軒目歓迎",
     late_round_welcome: "遅め歓迎",
     group_welcome: "グループ歓迎",
@@ -669,7 +728,22 @@ function tagLabel(tag) {
     pair_welcome: "二人向き",
     craft_beer: "クラフトビール",
     beer: "ビール",
+    local_beer: "地元ビール",
     sake: "日本酒",
+    whisky: "ウイスキー",
+    shochu: "焼酎",
+    wine: "ワイン",
+    cocktail: "カクテル",
+    meat: "肉料理",
+    yakitori: "串焼き",
+    game_meat: "ジビエ",
+    pizza: "ピザ",
+    pasta: "パスタ",
+    italian: "イタリアン",
+    chinese: "中華",
+    gyoza: "餃子",
+    seafood: "魚料理",
+    vegetables: "野菜料理",
     noodles: "締め",
     closing: "締め",
     snacks: "つまみ",
@@ -678,6 +752,7 @@ function tagLabel(tag) {
     talk_owner: "店主と会話",
     first_visit: "初訪問向き",
     quick_finish: "サクッと",
+    new_encounter: "新規開拓",
     solo_time: "一人時間",
     hidden: "穴場",
     romantic: "雰囲気重視",
@@ -734,7 +809,7 @@ async function startApp() {
 
   if (!state.shops.length) state.shops = await loadShopData();
   track("start");
-  await ponSay("よう。俺ははしごポン。店探しなら任せろ。5問だけ付き合え。", "normal");
+  await ponSay("よう。俺ははしごポン。店探しなら任せろ。8問だけ付き合え。ちゃんと相性を見る。", "normal");
   await renderQuestion();
 }
 
