@@ -586,6 +586,29 @@
       font-weight: 900;
     }
 
+    .refine-reaction {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 9px;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px dashed rgba(139, 92, 46, 0.35);
+    }
+
+    .refine-reaction img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+    }
+
+    .refine-reaction p {
+      margin: 0;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
     .hashigopon.is-animating[data-expression="good"] {
       animation: pon-good 0.48s ease;
     }
@@ -768,7 +791,24 @@
       }
 
       .pon-stage {
+        display: block;
+      }
+
+      .pon-stage > .hashigopon {
         display: none;
+      }
+
+      .status-card {
+        padding: 10px 12px;
+      }
+
+      .status-card summary {
+        font-size: 13px;
+      }
+
+      .status-card p {
+        font-size: 13px;
+        line-height: 1.55;
       }
 
       .panel {
@@ -827,9 +867,9 @@
         <img class="hero-banner" src="./assets/hashigopon-banner.png" alt="はしごポンに聞いてみよう！ 松戸のおいしい一軒を探すポン">
         <div class="pon-stage">
           <img class="hashigopon" id="ponImage" src="./assets/hashigopon-normal.png" alt="はしごポン">
-          <details class="status-card" id="profile">
-            <summary>はしごポンのプロフィール</summary>
-            <p>松戸の夜と街歩きが好きな、おせっかい案内役。口は悪いが粋な奴。お酒は好きだけど無理にはすすめない。イベント帰りの「もう一軒」を、楽しく一緒に考えます。</p>
+          <details class="status-card" id="profile" open>
+            <summary>最初に読んで：はしごポンとは</summary>
+            <p>松戸の夜に詳しい、見た目はゆるいタヌキの案内役。ため口で少し毒舌だけど悪気はありません。8問の答えから相性の良い店を探し、飲みすぎにはちゃんと止めに入ります。</p>
           </details>
         </div>
       </section>
@@ -878,5 +918,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./app-v1.js?v=20260717-5" defer></script>
+  <script src="./app-enhancements.js?v=20260717-1" defer></script>
 </body>
 </html>
