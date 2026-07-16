@@ -397,58 +397,37 @@ function getScores() {
 
 function scoreShop(shop, status) {
   let score = 0;
+  let compatibilityPoints = 0;
+  let compatibilityMaximum = 0;
   const matched = [];
   const answerGroups = [
     [state.answers.people?.tags || [], [...shop.peopleTags, ...shop.welcomeTags, ...shop.seatTags], 24],
     [state.answers.atmosphere?.tags || [], [...shop.atmosphereTags, ...shop.welcomeTags, ...shop.styleTags], 20],
-    [state.answers.foodDrink?.tags || [], [...shop.foodTags, ...shop.welcomeTags, ...shop.styleTags], 18],
-    [state.answers.mood?.tags || [], [...shop.moodTags, ...shop.roundTags, ...shop.welcomeTags], 16],
-    [state.answers.round?.tags || [], [...shop.roundTags, ...shop.welcomeTags, ...shop.styleTags], 16],
-    [state.answers.preference?.tags || [], [...shop.drinkTags, ...shop.foodTags, ...shop.styleTags], 22]
-  ];
-
-  answerGroups.forEach(([answerTags, shopTags, weight]) => {
-    const hits = answerTags.filter(tag => shopTags.includes(tag));
-    if (hits.length) {
-      score += weight;
-      matched.push(...hits);
-    }
-  });
-
-  const allTags = allAnswerTags();
-  const welcomeHits = [...new Set(allTags.filter(tag => shop.welcomeTags.includes(tag) || shop.ownerCommentTags.includes(tag)))];
-  score += welcomeHits.length * (shop.surveyConfirmed ? 6 : 3);
-  matched.push(...welcomeHits);
-
-  const people = state.answers.people?.people;
-  if (people === "large_group" && (shop.sizeTag === "large_shop" || shop.welcomeTags.includes("large_group_welcome"))) score += 8;
-  if (people === "solo" && (shop.seatTags.includes("counter") || shop.welcomeTags.includes("solo_welcome"))) score += 6;
-
-  if (status.open) score += 16;
-  if (status.state === "soon") score -= 12;
-  if (shop.hoursStatus === "needs_confirmation") score -= 4;
-  if (!status.open && shop.hoursStatus !== "needs_confirmation") score -= 14;
-
-  const budget = state.answers.budget?.budget;
-  if (budget === "low" && shop.budgetMin <= 1800) score += 12;
-  if (budget === "medium" && shop.budgetMin <= 3000 && shop.budgetMax <= 4500) score += 12;
-  if (budget === "high" && shop.budgetMax >= 4000) score += 12;
-  if (budget === "no_limit") score += 12;
+    [state.answers.foodDrink?.tags || [], [...shop.foodTags, ...shop.welcomeTags, …529 tokens truncated…nts += 12; }
+  if (budget === "no_limit") { score += 12; compatibilityPoints += 12; }
 
   const distance = state.answers.distance?.distance;
   if (distance === "near") {
-    if (shop.walkMinutes > 0 && shop.walkMinutes <= 3) score += 16;
-    else if (shop.walkMinutes > 0 && shop.walkMinutes <= 5) score += 9;
+    compatibilityMaximum += 16;
+    if (shop.walkMinutes > 0 && shop.walkMinutes <= 3) { score += 16; compatibilityPoints += 16; }
+    else if (shop.walkMinutes > 0 && shop.walkMinutes <= 5) { score += 9; compatibilityPoints += 9; }
     else if (shop.walkMinutes > 5) score -= 7;
   }
   if (distance === "walk" && shop.eventZone === ACTIVE_EVENT_ZONE) {
-    score += shop.walkMinutes > 0 && shop.walkMinutes <= 10 ? 10 : 4;
+    compatibilityMaximum += 10;
+    const walkPoints = shop.walkMinutes > 0 && shop.walkMinutes <= 10 ? 10 : 4;
+    score += walkPoints;
+    compatibilityPoints += walkPoints;
   }
   if (distance === "explore") {
+    compatibilityMaximum += 14;
     score += shop.eventZone && shop.eventZone !== ACTIVE_EVENT_ZONE ? 14 : 2;
+    compatibilityPoints += shop.eventZone && shop.eventZone !== ACTIVE_EVENT_ZONE ? 14 : 10;
   }
 
-  return { score, matchedTags: [...new Set(matched)] };
+  const compatibilityRatio = compatibilityMaximum > 0 ? compatibilityPoints / compatibilityMaximum : 0;
+  const compatibilityPercent = Math.round(Math.min(98, Math.max(52, 50 + compatibilityRatio * 48)));
+  return { score, compatibilityPercent, matchedTags: [...new Set(matched)] };
 }
 
 function shuffle(items) {
@@ -547,19 +526,25 @@ async function showThinkingAndResults() {
 function showResults(alternate = false) {
   const picks = selectRecommendations(alternate);
   const includesClosedFallback = picks.some(item => !item.status.open && item.shop.hoursStatus !== "needs_confirmation");
+  const topCompatibility = picks[0]?.compatibilityPercent;
   setPonImage("recommend");
   els.diagnosisImage.src = HASHIGOPON_IMAGES.recommend;
   els.results.classList.add("show");
   els.diagnosisTitle.textContent = diagnosisTitle();
   els.diagnosisText.textContent = picks.length
     ? includesClosedFallback
-      ? `はい、選んだ。この${picks.length}軒。今は営業中の店が少ないから、営業時の相性候補も混ぜた。行く前に時間は確認しろよ。`
-      : `はい、選んだ。この${picks.length}軒。今の気分と営業時間を見て選んだぞ。`
+      ? `はい、選んだ。本命は今のあなたとの相性${topCompatibility}％。今は営業中の店が少ないから、営業時の候補も混ぜた。行く前に時間は確認しろよ。`
+      : `はい、選んだ。本命は今のあなたとの相性${topCompatibility}％。8問の答えから見た数字だぞ。`
     : "今営業中の候補が見つからなかった。営業時間を確認して、無理せず帰れ。";
   els.storeGrid.innerHTML = "";
   picks.forEach((item, index) => els.storeGrid.append(renderStoreCard(item, index)));
   els.refineArea.hidden = true;
-  track("results", { shops: picks.map(item => item.shop.id) });
+  els.refineButton.textContent = "条件を一言足す";
+  els.refineButton.setAttribute("aria-expanded", "false");
+  track("results", {
+    shops: picks.map(item => item.shop.id),
+    compatibility: picks.map(item => item.compatibilityPercent)
+  });
   els.results.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -573,7 +558,7 @@ function diagnosisTitle() {
 }
 
 function renderStoreCard(item, index) {
-  const { shop, status, matchedTags } = item;
+  const { shop, status, matchedTags, compatibilityPercent } = item;
   const card = document.createElement("article");
   card.className = "store-card";
   const tags = matchedTags.length ? matchedTags.slice(0, 3) : fallbackTags(shop).slice(0, 3);
@@ -603,6 +588,7 @@ function renderStoreCard(item, index) {
     </div>
     <div class="store-body">
       <h3>${index + 1}. ${escapeHtml(shop.name)}</h3>
+      <div class="compatibility-score"><span>今のあなたとの相性</span><strong>${compatibilityPercent}％</strong></div>
       ${shop.ponComment ? `<p class="pon-comment">${escapeHtml(shop.ponComment)}</p>` : ""}
       <span class="recommend-type">${escapeHtml(recommendType(shop, status))}</span>
       <p class="reason">${escapeHtml(recommendReason(shop, status, tags))}</p>
@@ -811,6 +797,8 @@ async function startApp() {
   els.results.classList.remove("show");
   els.storeGrid.innerHTML = "";
   els.refineArea.hidden = true;
+  els.refineButton.textContent = "条件を一言足す";
+  els.refineButton.setAttribute("aria-expanded", "false");
   state.answers = {};
   state.answeredQuestionIds = [];
   state.requestText = "";
@@ -833,7 +821,15 @@ function startAppSafely() {
 }
 
 function renderRefineForm() {
+  if (!els.refineArea.hidden) {
+    els.refineArea.hidden = true;
+    els.refineButton.textContent = "条件を一言足す";
+    els.refineButton.setAttribute("aria-expanded", "false");
+    return;
+  }
   els.refineArea.hidden = false;
+  els.refineButton.textContent = "条件入力を閉じる";
+  els.refineButton.setAttribute("aria-expanded", "true");
   els.refineArea.innerHTML = `
     <label for="refineInput">条件を一言足す（任意）</label>
     <textarea id="refineInput" class="request-input" maxlength="120" placeholder="例：静かに話せる店 / 日本酒 / 締めにラーメン"></textarea>
@@ -850,7 +846,10 @@ function renderRefineForm() {
     state.currentPickIds = [];
     showResults(false);
   });
-  els.refineArea.querySelector("#refineInput").focus();
+  window.setTimeout(() => {
+    els.refineArea.scrollIntoView({ behavior: "smooth", block: "center" });
+    els.refineArea.querySelector("#refineInput").focus({ preventScroll: true });
+  }, 60);
 }
 
 document.querySelector("#retryButton")?.addEventListener("click", startAppSafely);
