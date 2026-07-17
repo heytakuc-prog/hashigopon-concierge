@@ -390,6 +390,97 @@
     showResults(false);
   }, true);
 
+  const optionalSurvey = document.querySelector("#optionalSurvey");
+  const surveyThanks = document.querySelector("#surveyThanks");
+  const surveySkipButton = document.querySelector("#surveySkipButton");
+  const surveyStorageKey = "hashigopon_optional_survey";
+
+  function loadSurveyAnswers() {
+    try {
+      return JSON.parse(sessionStorage.getItem(surveyStorageKey) || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  const surveyAnswers = loadSurveyAnswers();
+
+  function surveyQuestionElement(question) {
+    return optionalSurvey?.querySelector(`[data-survey-question="${question}"]`) || null;
+  }
+
+  function renderSurveyAnswer(question, value) {
+    const questionElement = surveyQuestionElement(question);
+    if (!questionElement) return;
+    questionElement.querySelectorAll(".survey-option").forEach(button => {
+      const selected = button.dataset.surveyValue === value;
+      button.setAttribute("aria-pressed", String(selected));
+      button.disabled = true;
+    });
+  }
+
+  function updateSurveyMessage() {
+    const answeredCount = ["age_group", "gender"].filter(question => surveyAnswers[question]).length;
+    if (surveySkipButton) surveySkipButton.hidden = answeredCount === 2;
+    if (!surveyThanks) return;
+    surveyThanks.textContent = answeredCount === 2
+      ? "協力ありがと。次はおすすめをもっとマシにする。"
+      : answeredCount === 1 ? "ありがとう。もう1問は答えても答えなくてもいいぞ。" : "";
+  }
+
+  function saveSurveyAnswer(question, value, sendLog = true) {
+    if (!question || !value || surveyAnswers[question]) return;
+    surveyAnswers[question] = value;
+    try {
+      sessionStorage.setItem(surveyStorageKey, JSON.stringify(surveyAnswers));
+    } catch {}
+    renderSurveyAnswer(question, value);
+    if (sendLog) track("answer", { question, value });
+    updateSurveyMessage();
+  }
+
+  optionalSurvey?.addEventListener("click", event => {
+    const button = event.target.closest?.(".survey-option");
+    if (!button) return;
+    const question = button.closest("[data-survey-question]")?.dataset.surveyQuestion;
+    saveSurveyAnswer(question, button.dataset.surveyValue);
+  });
+
+  surveySkipButton?.addEventListener("click", () => {
+    saveSurveyAnswer("age_group", "回答しない");
+    saveSurveyAnswer("gender", "回答しない");
+  });
+
+  Object.entries(surveyAnswers).forEach(([question, value]) => renderSurveyAnswer(question, value));
+  updateSurveyMessage();
+
+  let diagnosisSummaryLogged = false;
+
+  function selectedAnswerLabel(question) {
+    const selectedPayload = state.answers[question.id];
+    if (!selectedPayload) return "";
+    return question.options.find(([, payload]) => payload === selectedPayload)?.[0] || "";
+  }
+
+  window.addEventListener("hashigopon:event", event => {
+    const detail = event.detail || {};
+    if (detail.name === "start") {
+      diagnosisSummaryLogged = false;
+      return;
+    }
+    if (detail.name !== "results" || diagnosisSummaryLogged) return;
+
+    diagnosisSummaryLogged = true;
+    const answerPattern = QUESTIONS.map(selectedAnswerLabel).join("|||");
+    track("diagnosis_summary", {
+      question: "diagnosis_summary",
+      value: answerPattern,
+      shops: detail.shops || [],
+      compatibility: detail.compatibility || [],
+      tags: requestTags(state.requestText)
+    });
+  });
+
   window.hashigoponEnhancements = {
     normalizeSearchText,
     requestTags: text => requestTags(text),
