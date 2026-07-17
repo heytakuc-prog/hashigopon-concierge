@@ -52,7 +52,8 @@
     const name = String(detail?.name || "");
     if (!name) return [];
 
-    const primary = baseEvent(name);
+    const storedName = name === "diagnosis_summary" ? "answer" : name;
+    const primary = baseEvent(storedName);
     primary.question_id = String(detail.question || "");
     primary.selected_value = name === "refine" || name === "required_refine"
       ? "条件追加"
