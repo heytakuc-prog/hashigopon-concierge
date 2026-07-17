@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja" data-event-zone="matsudo_station" data-page-version="20260717-6" data-analytics-endpoint="https://script.google.com/macros/s/AKfycbzkhyZZe7_69-VLVUN-95wc21U9Y5l7BPRYeJiJNTC3dRZtUG5XVLJWTfP8vnJhLZck/exec">
+<html lang="ja" data-event-zone="matsudo_station" data-page-version="20260717-8" data-analytics-endpoint="https://script.google.com/macros/s/AKfycbzkhyZZe7_69-VLVUN-95wc21U9Y5l7BPRYeJiJNTC3dRZtUG5XVLJWTfP8vnJhLZck/exec">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -695,6 +695,97 @@
       font-weight: 1000;
     }
 
+    .optional-survey {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+      padding: 18px 0;
+      border-top: 2px dashed rgba(119, 79, 50, 0.24);
+      border-bottom: 2px dashed rgba(119, 79, 50, 0.24);
+    }
+
+    .optional-survey-copy {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .optional-label {
+      flex: 0 0 auto;
+      padding: 4px 8px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--green);
+      font-size: 12px;
+      font-weight: 1000;
+    }
+
+    .optional-survey h2 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .optional-survey-copy p,
+    .survey-thanks {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .survey-question {
+      display: grid;
+      gap: 8px;
+    }
+
+    .survey-question > p {
+      margin: 0;
+      font-weight: 1000;
+    }
+
+    .survey-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+      gap: 8px;
+    }
+
+    .survey-option,
+    .survey-skip {
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 2px solid rgba(119, 79, 50, 0.22);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fffdf7;
+      font-weight: 900;
+    }
+
+    .survey-option[aria-pressed="true"] {
+      border-color: var(--green);
+      color: #fff;
+      background: var(--green);
+    }
+
+    .survey-option:disabled {
+      opacity: 0.52;
+    }
+
+    .survey-option[aria-pressed="true"]:disabled {
+      opacity: 1;
+    }
+
+    .survey-skip {
+      justify-self: start;
+      min-height: 40px;
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .survey-thanks:not(:empty) {
+      color: var(--green);
+      font-weight: 900;
+    }
+
     .again-row {
       display: flex;
       gap: 8px;
@@ -908,6 +999,37 @@
           </div>
         </div>
       </div>
+      <section class="optional-survey" id="optionalSurvey" aria-labelledby="optionalSurveyTitle">
+        <div class="optional-survey-copy">
+          <span class="optional-label">任意</span>
+          <div>
+            <h2 id="optionalSurveyTitle">よかったら2問だけご協力お願いします</h2>
+            <p>今後のおすすめ改善に使います。答えなくても大丈夫です。</p>
+          </div>
+        </div>
+        <div class="survey-question" data-survey-question="age_group">
+          <p>年代</p>
+          <div class="survey-options">
+            <button class="survey-option" type="button" data-survey-value="20代" aria-pressed="false">20代</button>
+            <button class="survey-option" type="button" data-survey-value="30代" aria-pressed="false">30代</button>
+            <button class="survey-option" type="button" data-survey-value="40代" aria-pressed="false">40代</button>
+            <button class="survey-option" type="button" data-survey-value="50代" aria-pressed="false">50代</button>
+            <button class="survey-option" type="button" data-survey-value="60代以上" aria-pressed="false">60代以上</button>
+            <button class="survey-option" type="button" data-survey-value="回答しない" aria-pressed="false">回答しない</button>
+          </div>
+        </div>
+        <div class="survey-question" data-survey-question="gender">
+          <p>性別</p>
+          <div class="survey-options">
+            <button class="survey-option" type="button" data-survey-value="男性" aria-pressed="false">男性</button>
+            <button class="survey-option" type="button" data-survey-value="女性" aria-pressed="false">女性</button>
+            <button class="survey-option" type="button" data-survey-value="その他" aria-pressed="false">その他</button>
+            <button class="survey-option" type="button" data-survey-value="回答しない" aria-pressed="false">回答しない</button>
+          </div>
+        </div>
+        <button class="survey-skip" id="surveySkipButton" type="button">今回は答えない</button>
+        <p class="survey-thanks" id="surveyThanks" role="status" aria-live="polite"></p>
+      </section>
       <div class="again-row">
         <button type="button" id="randomButton">別の3軒を見る</button>
         <button type="button" id="refineButton">条件を一言足す</button>
@@ -918,8 +1040,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./app-v1.js?v=20260717-5" defer></script>
-  <script src="./app-enhancements.js?v=20260717-5" defer></script>
-  <script src="./event-log.js?v=20260717-2" defer></script>
+  <script src="./app-enhancements.js?v=20260717-7" defer></script>
+  <script src="./event-log.js?v=20260717-3" defer></script>
 </body>
 </html>
 
