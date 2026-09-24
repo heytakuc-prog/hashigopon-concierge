@@ -10,6 +10,7 @@
   let affinityStep = 0;
   let affinityAnswers = [];
   let affinitySeenIds = [];
+  let affinityRefined = false;
 
   const AFFINITY_QUESTIONS = [
     {
@@ -150,6 +151,7 @@
     els.conversation.innerHTML = "";
     els.answers.innerHTML = "";
     els.refineArea.hidden = true;
+    window.hashigoponExposure?.hideSpotlight();
   }
 
   function showModeHome() {
@@ -262,7 +264,7 @@
     els.progress.textContent = `${affinityStep} / ${AFFINITY_QUESTIONS.length}`;
     els.dots.innerHTML = AFFINITY_QUESTIONS.map((_, index) => `<span class="dot${index < affinityStep ? " active" : ""}"></span>`).join("");
     if (!question) {
-      showAffinityResults(false);
+      maybeRenderAffinityRefine();
       return;
     }
     addPonMessage(question.text, "normal");
@@ -275,7 +277,7 @@
         addUserMessage(label);
         affinityAnswers.push({ tags, axis: question.axis || "", target: target || 0 });
         affinityStep += 1;
-        track("affinity_answer", { step: affinityStep, value: label });
+        track("answer", { question: `affinity_${affinityStep}`, value: label });
         renderAffinityQuestion();
       });
       els.answers.append(button);
@@ -292,6 +294,7 @@
     affinityStep = 0;
     affinityAnswers = [];
     affinitySeenIds = [];
+    affinityRefined = false;
     state.answers = {};
     state.requestText = "";
     setPonImage("recommend");
@@ -300,11 +303,51 @@
     track("mode_start", { mode: activeMode });
   }
 
-  function showAffinityResults(alternate) {
-    const ranked = state.shops
+  function rankedAffinityShops() {
+    return state.shops
       .filter(shop => !shop.eventZone || shop.eventZone === ACTIVE_EVENT_ZONE)
       .map(affinityScore)
       .sort((left, right) => right.score - left.score);
+  }
+
+  function maybeRenderAffinityRefine() {
+    const ranked = rankedAffinityShops();
+    const closeTop = ranked[0] && ranked[2] && ranked[0].score - ranked[2].score < 12;
+    const closeBoundary = ranked[2] && ranked[3] && ranked[2].score - ranked[3].score < 6;
+    if (affinityRefined || (!closeTop && !closeBoundary)) {
+      showAffinityResults(false);
+      return;
+    }
+    const questionId = "affinity_priority_detail";
+    const options = [
+      ["雰囲気", ["calm", "stylish", "slow_talk"]],
+      ["料理", ["full_meal", "food_pairing", "hungry"]],
+      ["お酒", ["craft_beer", "wine", "sake", "cocktail"]],
+      ["店員さんとの距離感", ["talk_owner", "homey", "counter"]],
+      ["新しい店との出会い", ["new_encounter", "hidden", "curious", "first_visit"]]
+    ];
+    els.progress.textContent = "あと1問";
+    addPonMessage("候補が近いな。最後に、一番外せないものを教えて。", "thinking");
+    els.answers.innerHTML = "";
+    options.forEach(([label, tags]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "answer-button";
+      button.textContent = label;
+      button.addEventListener("click", () => {
+        affinityRefined = true;
+        affinityAnswers.push({ tags, axis: "", target: 0 });
+        addUserMessage(label);
+        track("refine_answer", { question: questionId, value: label, tags });
+        showAffinityResults(false);
+      });
+      els.answers.append(button);
+    });
+    track("refine_question", { question: questionId });
+  }
+
+  function showAffinityResults(alternate) {
+    const ranked = rankedAffinityShops();
     let candidates = alternate ? ranked.filter(item => !affinitySeenIds.includes(item.shop.id)) : ranked;
     if (candidates.length < 3) {
       affinitySeenIds = [];
@@ -327,7 +370,13 @@
     });
     document.querySelector("#randomButton").textContent = "別の相性を見る";
     document.querySelector("#refineButton").hidden = true;
-    track("results", { mode: activeMode, shops: picks.map(item => item.shop.id) });
+    track("results", {
+      mode: activeMode,
+      result_type: "match",
+      shops: picks.map(item => item.shop.id),
+      compatibility: picks.map(item => item.compatibilityPercent)
+    });
+    window.hashigoponExposure?.showSpotlight(picks, ranked, "affinity");
     els.results.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -364,9 +413,11 @@
   async function showDiscoveryResults() {
     activeMode = "discovery";
     await ensureShops();
+    track("mode_start", { mode: activeMode });
     modeHome.hidden = true;
     questionArea.hidden = true;
     modeBackButton.hidden = false;
+    window.hashigoponExposure?.hideSpotlight();
     const shops = state.shops.filter(shop => !shop.eventZone || shop.eventZone === ACTIVE_EVENT_ZONE);
     const picks = weightedDiscoveryPick(shops, 3).map(shop => ({
       shop,
@@ -384,11 +435,14 @@
       card.querySelector(".fit-label").textContent = ["今日の紹介", "新しい発見", "のぞいてみる"][index];
       const score = card.querySelector(".compatibility-score");
       if (score) score.innerHTML = "<span>相性判定なしの店舗紹介</span><strong>NEW</strong>";
+      card.querySelectorAll("[data-shop-action]").forEach(link => {
+        link.dataset.resultType = "discovery";
+      });
       els.storeGrid.append(card);
     });
     document.querySelector("#randomButton").textContent = "別の店と出会う";
     document.querySelector("#refineButton").hidden = true;
-    track("results", { mode: activeMode, shops: picks.map(item => item.shop.id) });
+    track("results", { mode: activeMode, result_type: "discovery", shops: picks.map(item => item.shop.id) });
     els.results.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -435,6 +489,7 @@
     affinityScore,
     weightedDiscoveryPick,
     profileEvidence,
-    favoriteIds
+    favoriteIds,
+    getActiveMode: () => activeMode
   };
 })();

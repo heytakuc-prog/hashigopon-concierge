@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja" data-event-zone="matsudo_station" data-page-version="20260717-8" data-analytics-endpoint="https://script.google.com/macros/s/AKfycbzkhyZZe7_69-VLVUN-95wc21U9Y5l7BPRYeJiJNTC3dRZtUG5XVLJWTfP8vnJhLZck/exec">
+<html lang="ja" data-event-zone="matsudo_station" data-page-version="20260924-1" data-analytics-endpoint="https://script.google.com/macros/s/AKfycbzkhyZZe7_69-VLVUN-95wc21U9Y5l7BPRYeJiJNTC3dRZtUG5XVLJWTfP8vnJhLZck/exec">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -631,6 +631,44 @@
       font-weight: 900;
     }
 
+    .discovery-spotlight {
+      margin-top: 22px;
+      padding: 18px;
+      border: 3px solid var(--yellow);
+      border-radius: 16px;
+      background: linear-gradient(135deg, #fff9df, #fff);
+    }
+
+    .discovery-spotlight[hidden] { display: none; }
+
+    .discovery-spotlight-head {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .discovery-spotlight-head img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+    }
+
+    .discovery-spotlight-head h2,
+    .discovery-spotlight-head p { margin: 0; }
+
+    .discovery-spotlight-head h2 { font-size: clamp(21px, 4vw, 28px); }
+
+    .discovery-spotlight-copy {
+      margin-top: 5px !important;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .discovery-spotlight .store-grid { grid-template-columns: minmax(0, 1fr); }
+
+    .discovery-spotlight .store-card { max-width: 620px; }
+
     .refine-reaction {
       display: grid;
       grid-template-columns: 48px 1fr;
@@ -1043,6 +1081,16 @@
         </div>
       </div>
       <div class="store-grid" id="storeGrid"></div>
+      <section class="discovery-spotlight" id="discoverySpotlight" aria-labelledby="discoverySpotlightTitle" hidden>
+        <div class="discovery-spotlight-head">
+          <img src="./assets/hashigopon-surprise.png" alt="もう1軒を紹介するはしごポン">
+          <div>
+            <h2 id="discoverySpotlightTitle">はしごポンからもう1軒</h2>
+            <p class="discovery-spotlight-copy">こんなお店もあるぞ。相性順位とは別の、新しい出会い枠だ。</p>
+          </div>
+        </div>
+        <div class="store-grid" id="discoverySpotlightCard"></div>
+      </section>
       <div class="feedback">
         <div class="feedback-inner">
           <img id="feedbackImage" src="./assets/hashigopon-satisfied.png" alt="感想を聞くはしごポン">
@@ -1096,9 +1144,10 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./app-v1.js?v=20260922-1" defer></script>
-  <script src="./app-enhancements.js?v=20260717-7" defer></script>
-  <script src="./app-modes.js?v=20260922-1" defer></script>
-  <script src="./event-log.js?v=20260717-3" defer></script>
+  <script src="./app-v1.js?v=20260924-1" defer></script>
+  <script src="./app-enhancements.js?v=20260924-1" defer></script>
+  <script src="./app-exposure.js?v=20260924-1" defer></script>
+  <script src="./app-modes.js?v=20260924-1" defer></script>
+  <script src="./event-log.js?v=20260924-1" defer></script>
 </body>
 </html>

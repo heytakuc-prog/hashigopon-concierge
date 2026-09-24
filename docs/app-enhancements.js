@@ -223,6 +223,7 @@
   const originalStartApp = startApp;
   startApp = async function startAppWithRotationReset() {
     state.seenPickIds = [];
+    state.distributionRefined = false;
     return originalStartApp();
   };
 
@@ -252,50 +253,91 @@
   }
 
   function recommendationNeedsMoreDetail(ranked) {
-    if ((state.requestText || "").trim() || ranked.length <= 3) return false;
+    if ((state.requestText || "").trim() || state.distributionRefined || ranked.length <= 3) return false;
 
+    const first = ranked[0];
     const third = ranked[2];
     const fourth = ranked[3];
-    if (!third || !fourth) return false;
+    if (!first || !third || !fourth) return false;
 
     const preference = state.answers.preference?.preference;
-    const broadPreference = !preference || ["any", "anything", "either"].includes(preference);
+    const genericAnswer = [
+      state.answers.mood?.mood === "more",
+      state.answers.atmosphere?.atmosphere === "calm",
+      state.answers.foodDrink?.purpose === "snack",
+      !preference || ["any", "anything", "either"].includes(preference),
+      state.answers.distance?.distance === "near"
+    ].some(Boolean);
     const boundaryGap = third.score - fourth.score;
-    return boundaryGap < (broadPreference ? 12 : 7);
+    const topSpread = first.score - third.score;
+    return genericAnswer && (boundaryGap < 10 || topSpread < 16);
+  }
+
+  function refineQuestionForAnswers() {
+    if (state.answers.atmosphere?.atmosphere === "calm") {
+      return {
+        id: "calm_detail",
+        text: "どんな“落ち着き”が好き？",
+        options: [
+          ["静かにゆっくり飲みたい", ["calm", "quiet_drink", "slow_talk"]],
+          ["アットホームな店がいい", ["homey", "traditional", "first_visit"]],
+          ["おしゃれな雰囲気がいい", ["stylish", "romantic", "pair_welcome"]],
+          ["カウンターで店員さんと話したい", ["counter", "talk_owner", "solo_welcome"]]
+        ]
+      };
+    }
+    if (state.answers.foodDrink?.purpose === "snack") {
+      return {
+        id: "snack_detail",
+        text: "もう少しだけ教えて。何を楽しみたい？",
+        options: [
+          ["料理にも少しこだわりたい", ["food_pairing", "vegetables", "snacks"]],
+          ["お酒の種類を楽しみたい", ["craft_beer", "wine", "sake", "cocktail"]],
+          ["店員さんと話したい", ["talk_owner", "homey", "counter"]],
+          ["知らない店を開拓したい", ["new_encounter", "hidden", "first_visit", "curious"]]
+        ]
+      };
+    }
+    return {
+      id: "priority_detail",
+      text: "じゃあ店選びで、一番大事なのは？",
+      options: [
+        ["雰囲気", ["stylish", "calm", "slow_talk"]],
+        ["料理", ["full_meal", "food_pairing", "hungry"]],
+        ["お酒", ["craft_beer", "wine", "sake", "cocktail"]],
+        ["店員さんとの距離感", ["talk_owner", "homey", "counter"]],
+        ["新しい店との出会い", ["new_encounter", "hidden", "first_visit", "curious"]]
+      ]
+    };
   }
 
   function renderRequiredRefine() {
-    els.progress.textContent = "あと1つ（必須）";
+    const question = refineQuestionForAnswers();
+    els.progress.textContent = "あと1問";
     els.answers.innerHTML = `
       <div class="request-box required-refine-box">
-        <label for="requiredRefineInput">候補が拮抗してる。あと一言だけ条件を教えて（必須）</label>
-        <p>料理・お酒・店の雰囲気など、いちばん外せない条件を入れて。</p>
-        <textarea id="requiredRefineInput" class="request-input" rows="3" maxlength="100" required
-          placeholder="例：クラフトビール／ジビエ／静かに話せる店"></textarea>
-        <button id="requiredRefineSubmit" class="answer-button primary" type="button">この条件でベスト3を出す</button>
+        <p><strong>${question.text}</strong></p>
+        <div class="answers" id="requiredRefineOptions"></div>
       </div>
     `;
-
-    const input = els.answers.querySelector("#requiredRefineInput");
-    const button = els.answers.querySelector("#requiredRefineSubmit");
-    input?.focus({ preventScroll: true });
-
-    button?.addEventListener("click", async () => {
-      const requestText = input?.value.trim() || "";
-      if (!requestText) {
-        toast("ここは必須。いちばん外せない条件を一言入れて。");
-        input?.focus();
-        return;
-      }
-
-      button.disabled = true;
-      state.requestText = requestText;
-      addUserMessage(requestText);
-      track("required_refine", { text: requestText, tags: requestTags(requestText) });
-      await ponSay("よし。その条件まで入れて、本当に相性がいいベスト3を出す。", "good");
-      els.answers.innerHTML = "";
-      showResults(false);
+    const options = els.answers.querySelector("#requiredRefineOptions");
+    question.options.forEach(([label, tags]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "answer-button";
+      button.textContent = label;
+      button.addEventListener("click", async () => {
+        state.distributionRefined = true;
+        state.answers.distributionRefine = { tags };
+        addUserMessage(label);
+        track("refine_answer", { question: question.id, value: label, tags });
+        await ponSay("なるほど。そこまで入れて、相性をもう一度計算する。", "good");
+        els.answers.innerHTML = "";
+        showResults(false);
+      });
+      options.append(button);
     });
+    track("refine_question", { question: question.id });
   }
 
   const originalShowThinkingAndResults = showThinkingAndResults;
@@ -310,7 +352,7 @@
     setPonImage("thinking");
     await wait(1100);
     els.thinking.classList.remove("show");
-    await ponSay(["候補がかなり拮抗してる。", "適当に3軒出すのは違うな。あと一言だけ条件を足して。"], "thinking");
+    await ponSay(["候補がかなり拮抗してる。", "店の違いをちゃんと拾うため、あと1問だけ教えて。"], "thinking");
     renderRequiredRefine();
   };
 
@@ -491,4 +533,3 @@
     recommendationNeedsMoreDetail
   };
 })();
-
