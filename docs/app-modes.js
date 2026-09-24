@@ -6,11 +6,25 @@
   const modeBackButton = document.querySelector("#modeBackButton");
   const favoriteSummary = document.querySelector("#favoriteSummary");
   const originalRenderStoreCard = renderStoreCard;
+  const originalRenderQuestion = renderQuestion;
+  const originalPonSay = ponSay;
   let activeMode = "home";
   let affinityStep = 0;
   let affinityAnswers = [];
   let affinitySeenIds = [];
   let affinityRefined = false;
+
+  renderQuestion = async function renderQuestionForActiveMode() {
+    if (state.appMode && state.appMode !== "now") return;
+    return originalRenderQuestion();
+  };
+
+  ponSay = async function ponSayForActiveMode(lines, image) {
+    const firstLine = Array.isArray(lines) ? lines[0] : lines;
+    const isInitialNowGreeting = String(firstLine || "").startsWith("よう。俺ははしごポン");
+    if (isInitialNowGreeting && state.appMode && state.appMode !== "now") return;
+    return originalPonSay(lines, image);
+  };
 
   const AFFINITY_QUESTIONS = [
     {
@@ -156,6 +170,7 @@
 
   function showModeHome() {
     activeMode = "home";
+    state.appMode = "home";
     resetResultArea();
     modeHome.hidden = false;
     questionArea.hidden = true;
@@ -168,6 +183,7 @@
 
   async function startNowMode() {
     activeMode = "now";
+    state.appMode = "now";
     modeHome.hidden = true;
     questionArea.hidden = false;
     modeBackButton.hidden = false;
@@ -286,6 +302,7 @@
 
   async function startAffinityMode() {
     activeMode = "affinity";
+    state.appMode = "affinity";
     await ensureShops();
     resetResultArea();
     modeHome.hidden = true;
@@ -412,6 +429,7 @@
 
   async function showDiscoveryResults() {
     activeMode = "discovery";
+    state.appMode = "discovery";
     await ensureShops();
     track("mode_start", { mode: activeMode });
     modeHome.hidden = true;
