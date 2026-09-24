@@ -84,13 +84,29 @@
     return events;
   }
 
-  function send(events) {
+  const pendingEvents = [];
+  let flushTimer = 0;
+
+  function sendNow(events) {
     if (!endpoint || !events.length) return;
     const body = JSON.stringify({ app_id: "hashigopon-v1", events });
     const blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
     if (navigator.sendBeacon?.(endpoint, blob)) return;
     fetch(endpoint, { method: "POST", mode: "no-cors", keepalive: true,
       headers: { "Content-Type": "text/plain;charset=UTF-8" }, body }).catch(() => {});
+  }
+
+  function flush() {
+    flushTimer = 0;
+    const batch = pendingEvents.splice(0, 10);
+    sendNow(batch);
+    if (pendingEvents.length) flushTimer = window.setTimeout(flush, 350);
+  }
+
+  function send(events) {
+    pendingEvents.push(...events);
+    window.clearTimeout(flushTimer);
+    flushTimer = window.setTimeout(flush, 220);
   }
 
   window.addEventListener("hashigopon:event", event => {
